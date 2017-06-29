@@ -1,0 +1,11 @@
+<litepal>
+    <dbname value = "coco_weather"/>
+
+    <version value = "1"/>
+
+    <list>
+        <mapping class = "com.lizij.cocoweather.db.Province"/>
+        <mapping class = "com.lizij.cocoweather.db.City"/>
+        <mapping class = "com.lizij.cocoweather.db.County"/>
+    </list>
+</litepal>

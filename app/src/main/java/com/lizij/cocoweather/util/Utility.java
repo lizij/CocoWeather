@@ -25,9 +25,9 @@ public class Utility {
     private static final String TAG = "Utility";
 
     public static boolean handleCityListResponse(String response){
-        HashMap<String, Integer> provinces = new HashMap<>();
-        HashMap<String, Integer> cities = new HashMap<>();
-        HashMap<String, String> counties = new HashMap<>();
+        HashMap<String, Integer> provinceHashMap = new HashMap<>();
+        HashMap<String, Integer> cityHashMap = new HashMap<>();
+        HashMap<String, String> countyHashMap = new HashMap<>();
 
         int provinceCode = 1;
         int cityCode = 1;
@@ -47,16 +47,17 @@ public class Utility {
                 String[] lines = response.split("\n");
                 Pattern pattern = Pattern.compile("(.*)\\t(.*)\\t(.*)\\t(.*)\\t(.*)\\t(.*)\\t(.*)\\t(.*)\\t(.*)\\t(.*)\\t(.*)\\t(.*)");
                 for (String line: lines) {
+                    if (!line.startsWith("CN")) continue;
                     Matcher matcher = pattern.matcher(line);
                     if (!matcher.find()) continue;
 
-                    String weatherId = matcher.group(1);
+                    String countyCode = matcher.group(1);
                     String countyName = matcher.group(3);
                     String provinceName = matcher.group(8);
                     String cityName = matcher.group(10);
 
-                    if (!provinces.containsKey(provinceName)){
-                        provinces.put(provinceName, provinceCode);
+                    if (!provinceHashMap.containsKey(provinceName)){
+                        provinceHashMap.put(provinceName, provinceCode);
                         Province province = new Province();
                         province.setProvinceName(provinceName);
                         province.setProvinceCode(provinceCode);
@@ -64,21 +65,22 @@ public class Utility {
                         provinceCode++;
                     }
 
-                    if (!cities.containsKey(cityName)){
-                        cities.put(cityName, cityCode);
+                    if (!cityHashMap.containsKey(cityName)){
+                        cityHashMap.put(cityName, cityCode);
                         City city = new City();
                         city.setCityName(cityName);
-                        city.setProvinceCode(provinces.get(provinceName));
+                        city.setCityCode(cityCode);
+                        city.setProvinceCode(provinceHashMap.get(provinceName));
                         city.save();
                         cityCode++;
                     }
 
-                    if (!counties.containsKey(countyName)){
-                        counties.put(countyName, weatherId);
+                    if (!countyHashMap.containsKey(countyName)){
+                        countyHashMap.put(countyName, countyCode);
                         County county = new County();
                         county.setCountyName(countyName);
-                        county.setCityCode(cities.get(cityName));
-                        county.setWeatherId(weatherId);
+                        county.setCountyCode(countyCode);
+                        county.setCityCode(cityHashMap.get(cityName));
                         county.save();
                     }
 
@@ -93,19 +95,19 @@ public class Utility {
     }
 
     public static void checkDatabase(){
-        List<Province> provinces = DataSupport.findAll(Province.class);
-        List<City> cities = DataSupport.findAll(City.class);
-        List<County> counties = DataSupport.findAll(County.class);
+        List<Province> provinceList = DataSupport.findAll(Province.class);
+        List<City> cityList = DataSupport.findAll(City.class);
+        List<County> countyList = DataSupport.findAll(County.class);
 
-        for (Province province : provinces){
+        for (Province province : provinceList){
             Log.d(TAG, "checkDatabase: " + province.toString());
         }
 
-        for (City city : cities){
+        for (City city : cityList){
             Log.d(TAG, "checkDatabase: " + city.toString());
         }
 
-        for (County county : counties){
+        for (County county : countyList){
             Log.d(TAG, "checkDatabase: " + county.toString());
         }
     }

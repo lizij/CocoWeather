@@ -9,6 +9,7 @@ import org.litepal.crud.DataSupport;
 public class City extends DataSupport {
     private int id;
     private String cityName;
+    private int cityCode;
     private int provinceCode;
 
     public int getId() {
@@ -27,6 +28,14 @@ public class City extends DataSupport {
         this.cityName = cityName;
     }
 
+    public int getCityCode() {
+        return cityCode;
+    }
+
+    public void setCityCode(int cityCode) {
+        this.cityCode = cityCode;
+    }
+
     public int getProvinceCode() {
         return provinceCode;
     }
@@ -40,6 +49,7 @@ public class City extends DataSupport {
         return "City{" +
                 "id=" + id +
                 ", cityName='" + cityName + '\'' +
+                ", cityCode=" + cityCode +
                 ", provinceCode=" + provinceCode +
                 '}';
     }

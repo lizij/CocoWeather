@@ -1,4 +1,4 @@
-package com.lizij.cocoweather;
+package com.lizij.cocoweather.application;
 
 import android.app.Application;
 import android.content.Context;

@@ -1,9 +1,9 @@
-package com.lizij.cocoweather;
+package com.lizij.cocoweather.fragment;
 
 
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -16,6 +16,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.lizij.cocoweather.activity.WeatherActivity;
+import com.lizij.cocoweather.application.MyApplication;
+import com.lizij.cocoweather.R;
 import com.lizij.cocoweather.db.City;
 import com.lizij.cocoweather.db.County;
 import com.lizij.cocoweather.db.Province;
@@ -23,7 +26,6 @@ import com.lizij.cocoweather.util.HttpUtil;
 import com.lizij.cocoweather.util.Utility;
 
 import org.litepal.crud.DataSupport;
-import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -55,8 +57,6 @@ public class ChooseAreaFragment extends Fragment {
 
     private int currentLevel;
 
-    private String CITY_LIST_ADDRESS = MyApplication.getProperties().getProperty("CITY_LIST_ADDRESS");
-
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
@@ -64,7 +64,7 @@ public class ChooseAreaFragment extends Fragment {
         titleText = (TextView) view.findViewById(R.id.title_text);
         backButton = (Button) view.findViewById(R.id.back_button);
         listView = (ListView) view.findViewById(R.id.list_view);
-        adapter = new ArrayAdapter<String>(getContext(), android.R.layout.simple_list_item_1, dataList);
+        adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, dataList);
         listView.setAdapter(adapter);
         return view;
     }
@@ -86,6 +86,11 @@ public class ChooseAreaFragment extends Fragment {
                         break;
                     case LEVEL_COUNTY:
                         currentCounty = countyList.get(position);
+                        String countyCode = currentCounty.getCountyCode();
+                        Intent intent = new Intent(getActivity(), WeatherActivity.class);
+                        intent.putExtra("county_code", countyCode);
+                        startActivity(intent);
+                        getActivity().finish();
                         break;
                     default:
                         break;
@@ -165,6 +170,7 @@ public class ChooseAreaFragment extends Fragment {
 
     private void updateCityList(){
         showProgressDialog();
+        String CITY_LIST_ADDRESS = MyApplication.getProperties().getProperty("CITY_LIST_ADDRESS");
         HttpUtil.sendOkHttpRequest(CITY_LIST_ADDRESS, new okhttp3.Callback(){
             @Override
             public void onResponse(Call call, Response response) throws IOException {

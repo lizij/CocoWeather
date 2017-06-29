@@ -1,15 +1,16 @@
 package com.lizij.cocoweather.util;
 
-import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.lizij.cocoweather.MyApplication;
+import com.google.gson.Gson;
 import com.lizij.cocoweather.db.City;
 import com.lizij.cocoweather.db.County;
 import com.lizij.cocoweather.db.Province;
+import com.lizij.cocoweather.weather.Weather;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.litepal.crud.DataSupport;
 
 import java.util.HashMap;
@@ -110,5 +111,18 @@ public class Utility {
         for (County county : countyList){
             Log.d(TAG, "checkDatabase: " + county.toString());
         }
+    }
+
+    public static Weather handleWeatherResponse(String response){
+        try{
+            JSONObject jsonObject = new JSONObject(response);
+            JSONArray jsonArray = jsonObject.getJSONArray("HeWeather5");
+            String weatherContent = jsonArray.getJSONObject(0).toString();
+            return new Gson().fromJson(weatherContent, Weather.class);
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
     }
 }

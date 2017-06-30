@@ -1,6 +1,8 @@
 package com.lizij.cocoweather.activity;
 
 import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.Build;
 import android.preference.PreferenceManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -8,11 +10,15 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.alibaba.fastjson.JSONArray;
+import com.bumptech.glide.Glide;
 import com.lizij.cocoweather.R;
 import com.lizij.cocoweather.application.MyApplication;
 import com.lizij.cocoweather.util.HttpUtil;
@@ -20,9 +26,12 @@ import com.lizij.cocoweather.util.Utility;
 import com.lizij.cocoweather.weather.DailyForecast;
 import com.lizij.cocoweather.weather.Weather;
 
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.ExecutionException;
 
 import okhttp3.Call;
 import okhttp3.Response;
@@ -30,6 +39,7 @@ import okhttp3.Response;
 public class WeatherActivity extends AppCompatActivity {
     private static final String TAG = "WeatherActivity";
 
+    private ImageView imageView;
     private ScrollView weatherLayout;
     private TextView titleCity;
     private TextView titleUpdateTime;
@@ -44,12 +54,20 @@ public class WeatherActivity extends AppCompatActivity {
 
     private String countyCode;
     private String timeToday;
+    private String cacheName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_weather);
 
+        if (Build.VERSION.SDK_INT >= 21){
+            View decorView = getWindow().getDecorView();
+            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+            getWindow().setStatusBarColor(Color.TRANSPARENT);
+        }
+
+        imageView = (ImageView) findViewById(R.id.bing_pic_img);
         weatherLayout = (ScrollView) findViewById(R.id.weather_layout);
         titleCity = (TextView) findViewById(R.id.title_city);
         titleUpdateTime = (TextView) findViewById(R.id.title_update_time);
@@ -64,14 +82,22 @@ public class WeatherActivity extends AppCompatActivity {
 
         countyCode = getIntent().getStringExtra("county_code");
         timeToday = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        cacheName = countyCode + "_weather_" + timeToday;
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        String weatherString = sharedPreferences.getString(countyCode + "_weather_" + timeToday, null);
+        String weatherString = sharedPreferences.getString(cacheName, null);
         if (!TextUtils.isEmpty(weatherString)){
             Weather weather = Utility.handleWeatherResponse(weatherString);
             showWeatherInfo(weather);
         }else{
             weatherLayout.setVisibility(View.INVISIBLE);
             requestWeather(countyCode);
+        }
+
+        String bingPic = sharedPreferences.getString("bing_pic", null);
+        if (bingPic != null){
+            Glide.with(this).load(bingPic).into(imageView);
+        }else {
+            loadBingPic();
         }
     }
 
@@ -103,7 +129,8 @@ public class WeatherActivity extends AppCompatActivity {
                     public void run() {
                         if (weather != null && "ok".equals(weather.status)){
                             SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
-                            editor.putString(countyCode + "_weather_" + timeToday, responseText);
+                            editor.putString(cacheName, responseText);
+                            editor.putString("county_code", countyCode);
                             editor.apply();
                             showWeatherInfo(weather);
                         }else{
@@ -148,9 +175,39 @@ public class WeatherActivity extends AppCompatActivity {
 
     }
 
-    @Override
-    public void onBackPressed() {
+    private void loadBingPic(){
+        String requestAddress = "http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1";
+        HttpUtil.sendOkHttpRequest(requestAddress, new okhttp3.Callback(){
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(WeatherActivity.this, "背景图片加载失败", Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
 
-        super.onBackPressed();
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                try{
+                    JSONObject bingJson = new JSONObject(response.body().string());
+                    final String url = "http://www.bing.com/" + bingJson.getJSONArray("images").getJSONObject(0).getString("url");
+                    Log.d(TAG, "onResponse: " + url);
+                    SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
+                    editor.putString("bing_pic", url);
+                    editor.apply();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Glide.with(WeatherActivity.this).load(url).into(imageView);
+                        }
+                    });
+                }catch (Exception e){
+
+                }
+            }
+        });
     }
 }

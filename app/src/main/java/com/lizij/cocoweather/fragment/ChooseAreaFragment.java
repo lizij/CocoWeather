@@ -16,6 +16,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.lizij.cocoweather.activity.MainActivity;
 import com.lizij.cocoweather.activity.WeatherActivity;
 import com.lizij.cocoweather.application.MyApplication;
 import com.lizij.cocoweather.R;
@@ -24,6 +25,7 @@ import com.lizij.cocoweather.db.County;
 import com.lizij.cocoweather.db.Province;
 import com.lizij.cocoweather.util.HttpUtil;
 import com.lizij.cocoweather.util.Utility;
+import com.lizij.cocoweather.weather.Weather;
 
 import org.litepal.crud.DataSupport;
 
@@ -87,10 +89,17 @@ public class ChooseAreaFragment extends Fragment {
                     case LEVEL_COUNTY:
                         currentCounty = countyList.get(position);
                         String countyCode = currentCounty.getCountyCode();
-                        Intent intent = new Intent(getActivity(), WeatherActivity.class);
-                        intent.putExtra("county_code", countyCode);
-                        startActivity(intent);
-                        getActivity().finish();
+                        if (getActivity() instanceof MainActivity){
+                            Intent intent = new Intent(getActivity(), WeatherActivity.class);
+                            intent.putExtra("county_code", countyCode);
+                            startActivity(intent);
+                            getActivity().finish();
+                        } else if (getActivity() instanceof WeatherActivity){
+                            WeatherActivity weatherActivity = (WeatherActivity) getActivity();
+                            weatherActivity.drawerLayout.closeDrawers();
+                            weatherActivity.swipeRefreshLayout.setRefreshing(true);
+                            weatherActivity.requestWeather(countyCode);
+                        }
                         break;
                     default:
                         break;

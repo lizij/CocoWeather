@@ -2,7 +2,7 @@ package com.lizij.cocoweather.util;
 
 import android.util.Log;
 
-import com.lizij.cocoweather.application.MyApplication;
+import com.lizij.cocoweather.application.AppApplication;
 
 /**
  * Created by Lizij on 2017/6/29.
@@ -15,7 +15,7 @@ public class LogUtil{
     public static final int WARN = 4;
     public static final int ERROR = 5;
 
-    public static int level = Integer.parseInt(MyApplication.getProperties().getProperty("LOG_LEVEL"));
+    public static int level = Integer.parseInt(AppApplication.getProperties().getProperty("LOG_LEVEL"));
 
     public static void v(String tag, String msg){
         if (level <= VERBOSE){

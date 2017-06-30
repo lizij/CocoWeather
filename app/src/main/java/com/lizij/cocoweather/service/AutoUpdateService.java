@@ -8,13 +8,9 @@ import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
-import android.support.annotation.IntDef;
 import android.util.Log;
-import android.widget.Toast;
 
-import com.bumptech.glide.Glide;
-import com.lizij.cocoweather.activity.WeatherActivity;
-import com.lizij.cocoweather.application.MyApplication;
+import com.lizij.cocoweather.application.AppApplication;
 import com.lizij.cocoweather.util.HttpUtil;
 import com.lizij.cocoweather.util.Utility;
 import com.lizij.cocoweather.weather.Weather;
@@ -60,7 +56,7 @@ public class AutoUpdateService extends Service {
         String timeToday = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
         final String cacheName = countyCode + "_weather_" + timeToday;
         if (countyCode != null){
-            String requestAddress = MyApplication.getWeatherApi(countyCode);
+            String requestAddress = AppApplication.getWeatherApi(countyCode);
             HttpUtil.sendOkHttpRequest(requestAddress, new okhttp3.Callback(){
                 @Override
                 public void onFailure(Call call, IOException e) {
@@ -83,7 +79,7 @@ public class AutoUpdateService extends Service {
     }
 
     private void updateBingPic(){
-        String requestAddress = MyApplication.getProperties().getProperty("BING_API");
+        String requestAddress = AppApplication.getProperties().getProperty("BING_API");
         HttpUtil.sendOkHttpRequest(requestAddress, new okhttp3.Callback(){
             @Override
             public void onFailure(Call call, IOException e) {

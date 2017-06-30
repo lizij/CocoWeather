@@ -2,7 +2,6 @@ package com.lizij.cocoweather.fragment;
 
 
 import android.app.ProgressDialog;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -16,16 +15,14 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.lizij.cocoweather.activity.MainActivity;
 import com.lizij.cocoweather.activity.WeatherActivity;
-import com.lizij.cocoweather.application.MyApplication;
+import com.lizij.cocoweather.application.AppApplication;
 import com.lizij.cocoweather.R;
 import com.lizij.cocoweather.db.City;
 import com.lizij.cocoweather.db.County;
 import com.lizij.cocoweather.db.Province;
 import com.lizij.cocoweather.util.HttpUtil;
 import com.lizij.cocoweather.util.Utility;
-import com.lizij.cocoweather.weather.Weather;
 
 import org.litepal.crud.DataSupport;
 
@@ -89,17 +86,10 @@ public class ChooseAreaFragment extends Fragment {
                     case LEVEL_COUNTY:
                         currentCounty = countyList.get(position);
                         String countyCode = currentCounty.getCountyCode();
-                        if (getActivity() instanceof MainActivity){
-                            Intent intent = new Intent(getActivity(), WeatherActivity.class);
-                            intent.putExtra("county_code", countyCode);
-                            startActivity(intent);
-                            getActivity().finish();
-                        } else if (getActivity() instanceof WeatherActivity){
-                            WeatherActivity weatherActivity = (WeatherActivity) getActivity();
-                            weatherActivity.drawerLayout.closeDrawers();
-                            weatherActivity.swipeRefreshLayout.setRefreshing(true);
-                            weatherActivity.requestWeather(countyCode);
-                        }
+                        WeatherActivity weatherActivity = (WeatherActivity) getActivity();
+                        weatherActivity.drawerLayout.closeDrawers();
+                        weatherActivity.swipeRefreshLayout.setRefreshing(true);
+                        weatherActivity.requestWeather(countyCode);
                         break;
                     default:
                         break;
@@ -179,7 +169,7 @@ public class ChooseAreaFragment extends Fragment {
 
     private void updateCityList(){
         showProgressDialog();
-        String CITY_LIST_ADDRESS = MyApplication.getProperties().getProperty("CITY_LIST_ADDRESS");
+        String CITY_LIST_ADDRESS = AppApplication.getProperties().getProperty("CITY_LIST_ADDRESS");
         HttpUtil.sendOkHttpRequest(CITY_LIST_ADDRESS, new okhttp3.Callback(){
             @Override
             public void onResponse(Call call, Response response) throws IOException {

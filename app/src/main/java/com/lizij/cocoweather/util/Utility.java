@@ -46,16 +46,14 @@ public class Utility {
         if (!TextUtils.isEmpty(response)){
             try{
                 String[] lines = response.split("\n");
-                Pattern pattern = Pattern.compile("(.*)\\t(.*)\\t(.*)\\t(.*)\\t(.*)\\t(.*)\\t(.*)\\t(.*)\\t(.*)\\t(.*)\\t(.*)\\t(.*)");
                 for (String line: lines) {
                     if (!line.startsWith("CN")) continue;
-                    Matcher matcher = pattern.matcher(line);
-                    if (!matcher.find()) continue;
+                    String[] words = line.split("\t");
 
-                    String countyCode = matcher.group(1);
-                    String countyName = matcher.group(3);
-                    String provinceName = matcher.group(8);
-                    String cityName = matcher.group(10);
+                    String countyCode = words[0];
+                    String countyName = words[2];
+                    String provinceName = words[7];
+                    String cityName = words[9];
 
                     if (!provinceHashMap.containsKey(provinceName)){
                         provinceHashMap.put(provinceName, provinceCode);

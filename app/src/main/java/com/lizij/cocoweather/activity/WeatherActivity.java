@@ -15,7 +15,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -24,7 +23,7 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.lizij.cocoweather.R;
-import com.lizij.cocoweather.application.MyApplication;
+import com.lizij.cocoweather.application.AppApplication;
 import com.lizij.cocoweather.service.AutoUpdateService;
 import com.lizij.cocoweather.util.HttpUtil;
 import com.lizij.cocoweather.util.Utility;
@@ -62,6 +61,9 @@ public class WeatherActivity extends AppCompatActivity {
     private String countyCode;
     private String cacheName;
 
+    private SharedPreferences sharedPreferences;
+    private SharedPreferences.Editor editor;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -89,7 +91,8 @@ public class WeatherActivity extends AppCompatActivity {
         navButton = (Button) findViewById(R.id.nav_button);
         drawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
 
         String bingPic = sharedPreferences.getString("bing_pic", null);
         if (bingPic != null){
@@ -98,7 +101,12 @@ public class WeatherActivity extends AppCompatActivity {
             loadBingPic();
         }
 
-        countyCode = getIntent().getStringExtra("county_code");
+//        countyCode = getIntent().getStringExtra("county_code");
+        countyCode = sharedPreferences.getString("county_code", null);
+        if (TextUtils.isEmpty(countyCode)){
+            drawerLayout.openDrawer(GravityCompat.START);
+        }
+
         String timeToday = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
         cacheName = countyCode + "_weather_" + timeToday;
         String weatherString = sharedPreferences.getString(cacheName, null);
@@ -126,7 +134,8 @@ public class WeatherActivity extends AppCompatActivity {
     }
 
     public void requestWeather(final String countyCode){
-        String requestAddress = MyApplication.getWeatherApi(countyCode);
+        if (TextUtils.isEmpty(countyCode)) return;
+        String requestAddress = AppApplication.getWeatherApi(countyCode);
 
         Log.d(TAG, "requestWeather: " + requestAddress);
 
@@ -151,7 +160,6 @@ public class WeatherActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         if (weather != null && "ok".equals(weather.status)){
-                            SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
                             editor.putString(cacheName, responseText);
                             editor.putString("county_code", countyCode);
                             editor.apply();
@@ -202,7 +210,7 @@ public class WeatherActivity extends AppCompatActivity {
     }
 
     private void loadBingPic(){
-        String requestAddress = MyApplication.getProperties().getProperty("BING_API");
+        String requestAddress = AppApplication.getProperties().getProperty("BING_API");
         HttpUtil.sendOkHttpRequest(requestAddress, new okhttp3.Callback(){
             @Override
             public void onFailure(Call call, IOException e) {
@@ -219,9 +227,11 @@ public class WeatherActivity extends AppCompatActivity {
             public void onResponse(Call call, Response response) throws IOException {
                 try{
                     JSONObject bingJson = new JSONObject(response.body().string());
+                    com.alibaba.fastjson.JSONObject bj = com.alibaba.fastjson.JSONObject.parseObject(response.body().string());
+                    final String picUrl = bj.getJSONArray("images").getJSONObject(0).getString("url");
                     final String url = "http://www.bing.com/" + bingJson.getJSONArray("images").getJSONObject(0).getString("url");
-                    Log.d(TAG, "onResponse: " + url);
-                    SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
+                    Log.d(TAG, "onResponse: " + picUrl);
+
                     editor.putString("bing_pic", url);
                     editor.apply();
                     runOnUiThread(new Runnable() {

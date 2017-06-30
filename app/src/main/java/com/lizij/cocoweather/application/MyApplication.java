@@ -43,4 +43,11 @@ public class MyApplication extends Application {
         return properties;
     }
 
+    public static String getWeatherApi(String countyCode){
+        String API_ADDRESS = MyApplication.getProperties().getProperty("API_ADDRESS");
+        String API_KEY = MyApplication.getProperties().getProperty("API_KEY");
+        String requestAddress = API_ADDRESS + "weather?city=" + countyCode + "&key=" + API_KEY;
+        return requestAddress;
+    }
+
 }

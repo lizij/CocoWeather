@@ -1,5 +1,6 @@
 package com.lizij.cocoweather.activity;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
@@ -24,6 +25,7 @@ import android.widget.Toast;
 import com.bumptech.glide.Glide;
 import com.lizij.cocoweather.R;
 import com.lizij.cocoweather.application.MyApplication;
+import com.lizij.cocoweather.service.AutoUpdateService;
 import com.lizij.cocoweather.util.HttpUtil;
 import com.lizij.cocoweather.util.Utility;
 import com.lizij.cocoweather.weather.DailyForecast;
@@ -58,7 +60,6 @@ public class WeatherActivity extends AppCompatActivity {
     public DrawerLayout drawerLayout;
 
     private String countyCode;
-    private String timeToday;
     private String cacheName;
 
     @Override
@@ -98,7 +99,7 @@ public class WeatherActivity extends AppCompatActivity {
         }
 
         countyCode = getIntent().getStringExtra("county_code");
-        timeToday = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
+        String timeToday = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
         cacheName = countyCode + "_weather_" + timeToday;
         String weatherString = sharedPreferences.getString(cacheName, null);
         if (!TextUtils.isEmpty(weatherString)){
@@ -125,9 +126,7 @@ public class WeatherActivity extends AppCompatActivity {
     }
 
     public void requestWeather(final String countyCode){
-        String API_ADDRESS = MyApplication.getProperties().getProperty("API_ADDRESS");
-        String API_KEY = MyApplication.getProperties().getProperty("API_KEY");
-        String requestAddress = API_ADDRESS + "weather?city=" + countyCode + "&key=" + API_KEY;
+        String requestAddress = MyApplication.getWeatherApi(countyCode);
 
         Log.d(TAG, "requestWeather: " + requestAddress);
 
@@ -198,10 +197,12 @@ public class WeatherActivity extends AppCompatActivity {
         sportText.setText("运动建议:" + weather.suggestion.sport.info);
         weatherLayout.setVisibility(View.VISIBLE);
 
+        Intent intent = new Intent(this, AutoUpdateService.class);
+        startService(intent);
     }
 
     private void loadBingPic(){
-        String requestAddress = "http://www.bing.com/HPImageArchive.aspx?format=js&idx=0&n=1";
+        String requestAddress = MyApplication.getProperties().getProperty("BING_API");
         HttpUtil.sendOkHttpRequest(requestAddress, new okhttp3.Callback(){
             @Override
             public void onFailure(Call call, IOException e) {
@@ -230,7 +231,7 @@ public class WeatherActivity extends AppCompatActivity {
                         }
                     });
                 }catch (Exception e){
-
+                    e.printStackTrace();
                 }
             }
         });

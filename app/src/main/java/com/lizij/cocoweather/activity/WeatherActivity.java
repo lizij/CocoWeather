@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Build;
 import android.preference.PreferenceManager;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -40,6 +41,7 @@ public class WeatherActivity extends AppCompatActivity {
     private static final String TAG = "WeatherActivity";
 
     private ImageView imageView;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private ScrollView weatherLayout;
     private TextView titleCity;
     private TextView titleUpdateTime;
@@ -68,6 +70,7 @@ public class WeatherActivity extends AppCompatActivity {
         }
 
         imageView = (ImageView) findViewById(R.id.bing_pic_img);
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipe_refresh);
         weatherLayout = (ScrollView) findViewById(R.id.weather_layout);
         titleCity = (TextView) findViewById(R.id.title_city);
         titleUpdateTime = (TextView) findViewById(R.id.title_update_time);
@@ -80,10 +83,18 @@ public class WeatherActivity extends AppCompatActivity {
         carWashText = (TextView) findViewById(R.id.car_wash_text);
         sportText = (TextView) findViewById(R.id.sport_text);
 
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        String bingPic = sharedPreferences.getString("bing_pic", null);
+        if (bingPic != null){
+            Glide.with(this).load(bingPic).into(imageView);
+        }else {
+            loadBingPic();
+        }
+
         countyCode = getIntent().getStringExtra("county_code");
         timeToday = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
         cacheName = countyCode + "_weather_" + timeToday;
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         String weatherString = sharedPreferences.getString(cacheName, null);
         if (!TextUtils.isEmpty(weatherString)){
             Weather weather = Utility.handleWeatherResponse(weatherString);
@@ -93,12 +104,12 @@ public class WeatherActivity extends AppCompatActivity {
             requestWeather(countyCode);
         }
 
-        String bingPic = sharedPreferences.getString("bing_pic", null);
-        if (bingPic != null){
-            Glide.with(this).load(bingPic).into(imageView);
-        }else {
-            loadBingPic();
-        }
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                requestWeather(countyCode);
+            }
+        });
     }
 
     public void requestWeather(final String countyCode){
@@ -116,6 +127,7 @@ public class WeatherActivity extends AppCompatActivity {
                     @Override
                     public void run() {
                         Toast.makeText(WeatherActivity.this, "获取天气失败", Toast.LENGTH_LONG).show();
+                        swipeRefreshLayout.setRefreshing(false);
                     }
                 });
             }
@@ -136,6 +148,7 @@ public class WeatherActivity extends AppCompatActivity {
                         }else{
                             Toast.makeText(WeatherActivity.this, "获取天气失败", Toast.LENGTH_LONG).show();
                         }
+                        swipeRefreshLayout.setRefreshing(false);
                     }
                 });
             }

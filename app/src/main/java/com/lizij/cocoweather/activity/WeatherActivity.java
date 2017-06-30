@@ -58,7 +58,7 @@ public class WeatherActivity extends AppCompatActivity {
     private Button navButton;
     public DrawerLayout drawerLayout;
 
-    private String countyCode;
+    public String countyCode;
     private String cacheName;
 
     private SharedPreferences sharedPreferences;
@@ -227,10 +227,8 @@ public class WeatherActivity extends AppCompatActivity {
             public void onResponse(Call call, Response response) throws IOException {
                 try{
                     JSONObject bingJson = new JSONObject(response.body().string());
-                    com.alibaba.fastjson.JSONObject bj = com.alibaba.fastjson.JSONObject.parseObject(response.body().string());
-                    final String picUrl = bj.getJSONArray("images").getJSONObject(0).getString("url");
                     final String url = "http://www.bing.com/" + bingJson.getJSONArray("images").getJSONObject(0).getString("url");
-                    Log.d(TAG, "onResponse: " + picUrl);
+                    Log.d(TAG, "onResponse: " + url);
 
                     editor.putString("bing_pic", url);
                     editor.apply();
@@ -246,4 +244,11 @@ public class WeatherActivity extends AppCompatActivity {
             }
         });
     }
+
+//    @Override
+//    protected void onDestroy() {
+//        super.onDestroy();
+//        editor.clear();
+//        editor.commit();
+//    }
 }

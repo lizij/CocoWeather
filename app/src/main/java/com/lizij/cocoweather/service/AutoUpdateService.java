@@ -39,6 +39,7 @@ public class AutoUpdateService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         updateWeather();
         updateBingPic();
+        updateCityList();
 
         AlarmManager alarmManager = (AlarmManager) getSystemService(ALARM_SERVICE);
         int interval = 8 * 60 * 60 * 1000;
@@ -98,6 +99,23 @@ public class AutoUpdateService extends Service {
                 }catch (Exception e){
                     e.printStackTrace();
                 }
+            }
+        });
+    }
+
+    private void updateCityList(){
+        String CITY_LIST_ADDRESS = AppApplication.getProperties().getProperty("CITY_LIST_ADDRESS");
+        HttpUtil.sendOkHttpRequest(CITY_LIST_ADDRESS, new okhttp3.Callback(){
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if(Utility.handleCityListResponse(response.body().string())){
+                    Utility.checkDatabase();
+                }
+            }
+
+            @Override
+            public void onFailure(Call call, IOException e) {
+                e.printStackTrace();
             }
         });
     }
